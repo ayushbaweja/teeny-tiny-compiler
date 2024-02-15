@@ -83,6 +83,39 @@ class Lexer:
             token = Token(self.curChar, TokenType.NEWLINE)
         elif self.curChar == '\0':
             token = Token('', TokenType.EOF)
+        elif self.curChar == '\"':
+            # getting char between quotations
+            self.nextChar()
+            startPos = self.curPos
+            while self.curChar != '\"':
+                if self.curChar == '\r' or self.curChar == '\n' or self.curChar == '\t' or self.curChar == '\\' or self.curChar == '%': # no special char
+                    self.abort("Illegal character in string.")
+                self.nextChar()
+            tokText = self.source[startPos : self.curPos]
+            token = Token(tokText, TokenType.STRING)
+        elif self.curChar.isdigit():
+            startPos = self.curPos
+            while self.peek().isdigit():
+                self.nextChar()
+            if self.peek() == '.':
+                self.nextChar()
+                if not self.peek().isdigit():
+                    self.abort("Illegal character in number.")
+                while self.peek().isdigit():
+                    self.nextChar()
+            tokText = self.source[startPos : self.curPos + 1]
+            token = Token(tokText, TokenType.NUMBER)
+        elif self.curChar.isalpha():
+                startPos = self.curPos
+                while self.peek().isalnum():
+                    self.nextChar()
+                # checking if token is keyword
+                tokText = self.source[startPos : self.curPos + 1]
+                keyword = Token.checkIfKeyword(tokText)
+                if keyword == None:
+                    token = Token(tokText, TokenType.IDENT)
+                else:
+                    token = Token(tokText, keyword)
         else:
             # unknown token
             self.abort("Unknown token: " + self.curChar)
@@ -93,6 +126,13 @@ class Token:
     def __init__(self, tokenText, tokenKind):
         self.text = tokenText
         self.kind = tokenKind
+
+    @staticmethod
+    def checkIfKeyword(tokenText):
+        for kind in TokenType:
+            if kind.name == tokenText and kind.value >= 100 and kind.value < 200:
+                return kind
+        return None
 
 class TokenType(enum.Enum):
     EOF = -1
