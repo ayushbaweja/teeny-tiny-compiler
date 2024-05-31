@@ -48,6 +48,67 @@ class Parser:
         while(self.checkToken(TokenType.NEWLINE)): # allow more
             self.nextToken()
     
+    # comparison ::= expression (("==" | "!=" | ">" | ">=" | "<" | "<=") expression)+
+    def comparison(self):
+        print("COMPARISON")
+        self.expression()
+
+        # one comparison operator and another expression
+        if self.isComparisonOperator():
+            self.nextToken()
+            self.expression()
+        else:
+            self.abort("Expected comparison operator at: " + self.currToken.text)
+
+        # can have 0 or more comparison operator and expression
+        while self.isComparisonOperator():
+            self.nextToken()
+            self.expression()
+    
+    # True if curr token is comparison operator
+    def isComparisonOperator(self):
+        return self.checkToken(TokenType.GT) or self.checkToken(TokenType.GTEQ) or self.checkToken(TokenType.LT) or self.checkToken(TokenType.LTEQ) or self.checkToken(TokenType.EQEQ) or self.checkToken(TokenType.NOTEQ)
+    
+    # expression ::= term {( "-" | "+" ) term}
+    def expression(self):
+        print("EXPRESSION")
+        self.term()
+
+        # 0 or more +/- and expressions
+        while self.checkToken(TokenType.PLUS) or self.checkToken(TokenType.MINUS):
+            self.nextToken()
+            self.term()
+    
+    # term ::= unary {( "/" | "*" ) unary}
+    def term(self):
+        print("TERM")
+
+        self.unary()
+        # can have 0 or more *// expressions
+        while self.checkToken(TokenType.ASTERISK) or self.checkToken(TokenType.SLASH):
+            self.nextToken()
+            self.unary()
+    
+    # unary ::= ["+" | "-"] primary
+    def unary(self):
+        print("UNARY")
+
+        # Optional unary +/-
+        if self.checkToken(TokenType.PLUS) or self.checkToken(TokenType.MINUS):
+            self.nextToken()        
+        self.primary()
+    
+    # primary ::= number | ident
+    def primary(self):
+        print("PRIMARY (" + self.currToken.text + ")")
+
+        if self.checkToken(TokenType.NUMBER):
+            self.nextToken()
+        elif self.checkToken(TokenType.IDENT):
+            self.nextToken()
+        else:
+            self.abort("Unexpected token at " + self.currToken.text)
+
     def statement(self):
         # check first token to identify statement type
 
